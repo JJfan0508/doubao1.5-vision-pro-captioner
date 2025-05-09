@@ -11,12 +11,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class APIHandler:
-    """API处理类，仅用于豆包vision pro模型"""
+    """API处理类，用于豆包vision pro模型"""
     
     @staticmethod
     def prepare_doubao_request(img_str, custom_prompt, model_name, detail_level):
         return {
-            "model": model_name or "doubao-1-5-vision-pro-32k-250115",
+            "model": model_name,  # 使用传入的model_name
             "messages": [
                 {
                     "role": "user",
@@ -65,15 +65,7 @@ class ImageToPromptNode:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "model_name": ("STRING", {
-                    "default": "doubao-1-5-vision-pro-32k-250115",
-                    "multiline": False
-                }),
-                "detail_level": (["high", "low", "auto"],),  # 添加图像深度理解模式选择
-                "api_url": ("STRING", {
-                    "default": "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
-                    "multiline": False
-                }),
+                "detail_level": (["high", "low", "auto"],),  # 图像深度理解模式选择
                 "api_key": ("STRING", {
                     "default": "",
                     "multiline": False
@@ -83,6 +75,16 @@ class ImageToPromptNode:
                     "default": "描述这张图片，关注以下方面：主体、风格、光线、色彩、构图、细节"
                 }),
             },
+            "optional": {
+                "model_name": ("STRING", {
+                    "default": "doubao-1-5-vision-pro-32k-250115",
+                    "multiline": False
+                }),
+                "api_url": ("STRING", {
+                    "default": "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
+                    "multiline": False
+                }),
+            }
         }
 
     RETURN_TYPES = ("STRING",)
@@ -95,7 +97,11 @@ class ImageToPromptNode:
         self.custom_prompt_default = "描述这张图片，关注以下方面：主体、风格、光线、色彩、构图、细节"
         self.detail_level_default = "high"  # 默认使用高精度模式
 
-    def image_to_prompt(self, image, api_url, api_key, model_name, detail_level, custom_prompt):
+    def image_to_prompt(self, image, detail_level, api_key, custom_prompt, model_name=None, api_url=None):
+        # 使用默认值如果未提供
+        model_name = model_name or self.model_name_default
+        api_url = api_url or self.api_url_default
+        
         try:
             # 将PyTorch张量转换为PIL图像
             i = 255. * image.cpu().numpy().squeeze()
@@ -112,9 +118,8 @@ class ImageToPromptNode:
             
             # 发送请求
             logger.info(f"正在发送请求到 {api_url}")
-            logger.info(f"请求头: {headers}")
-            logger.info(f"请求体: {json.dumps(payload, ensure_ascii=False)}")
-            logger.info(f"使用图像深度理解模式: {detail_level}")  # 记录使用的深度理解模式
+            logger.info(f"使用模型: {model_name}")
+            logger.info(f"使用图像深度理解模式: {detail_level}")
             
             response = requests.post(
                 api_url,
