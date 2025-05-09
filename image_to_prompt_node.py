@@ -16,7 +16,7 @@ class APIHandler:
     @staticmethod
     def prepare_doubao_request(img_str, custom_prompt, model_name, detail_level):
         return {
-            "model": model_name or "doubao-1.5-vision-pro-250115",
+            "model": model_name or "doubao-1-5-vision-pro-32k-250115",
             "messages": [
                 {
                     "role": "user",
@@ -66,7 +66,7 @@ class ImageToPromptNode:
             "required": {
                 "image": ("IMAGE",),
                 "model_name": ("STRING", {
-                    "default": "doubao-1.5-vision-pro-250115",
+                    "default": "doubao-1-5-vision-pro-32k-250115",
                     "multiline": False
                 }),
                 "detail_level": (["high", "low", "auto"],),  # 添加图像深度理解模式选择
@@ -90,7 +90,7 @@ class ImageToPromptNode:
     CATEGORY = "分析/反向推导"
 
     def __init__(self):
-        self.model_name_default = "doubao-1.5-vision-pro-250115"
+        self.model_name_default = "doubao-1-5-vision-pro-32k-250115"
         self.api_url_default = "https://ark.cn-beijing.volces.com/api/v3/chat/completions"
         self.custom_prompt_default = "描述这张图片，关注以下方面：主体、风格、光线、色彩、构图、细节"
         self.detail_level_default = "high"  # 默认使用高精度模式
